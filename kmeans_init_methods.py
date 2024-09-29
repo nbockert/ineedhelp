@@ -14,6 +14,7 @@ class KMeans():
         self.centroids = []
     
     def snap(self, centers):
+        print("at snap")
         filename = f"snapshot_{len(self.snaps)}.png"
         filepath = os.path.join("static", filename)
         fig, ax = plt.subplots()
@@ -27,16 +28,16 @@ class KMeans():
 
     
     def lloyds(self,init_method,centroids):
+        print(init_method)
         if init_method == 'manual':
             self.centroids = centroids
             self.snap(centroids)
             self.make_clusters(self.centroids)
         else:
-            centers = self.initialize(init_method)
-            print("centers after init method",centers)
-            self.centroids=centers
-            self.make_clusters(centers)
-            self.snap(centers)
+            self.centroids = self.initialize(init_method)
+            print("fucking centroids",len(self.centroids))
+            self.make_clusters(self.centroids)
+            self.snap(self.centroids)
         # self.snap(centers)
             print("made clusters")
         new_centers = self.compute_centers()
@@ -45,8 +46,8 @@ class KMeans():
         print("snap of new centers")
         while self.are_diff(self.centroids, new_centers):
             self.unassign()
-            centers = new_centers
-            self.make_clusters(centers)
+            self.centroids = new_centers
+            self.make_clusters(self.centroids)
             new_centers = self.compute_centers()
             self.snap(new_centers)
         return self.snaps
@@ -88,8 +89,12 @@ class KMeans():
     #             plt.draw()
 
     def random_initialization(self):
-        return self.data[np.random.choice(len(self.data), size=self.k, replace=False)]
-
+        # centroids = self.data[np.random.choice(len(self.data), size=self.k, replace=False)]
+        # print("Randomly initialized centroids:", centroids)
+        # return centroids
+        indices = self.data[np.random.choice(len(self.data), size=self.k, replace=False)]
+        return indices
+    
     def farthest_first_initialization(self):
         centers = [self.data[np.random.randint(len(self.data))]]  # Choose the first center randomly
         for _ in range(1, self.k):
@@ -107,7 +112,6 @@ class KMeans():
             probs = dist / dist.sum()  # Probability based on distance
             new_center = self.data[np.random.choice(len(self.data), p=probs)]
             centers.append(new_center)
-        print(np.array(centers))
         return np.array(centers)
 
     def make_clusters(self, centers):
@@ -140,14 +144,16 @@ class KMeans():
     
     def are_diff(self,centers,new_centers):
         for i in range(self.k):
-            if self.dist(centers[i],new_centers[i]) == 0:
+            if self.dist(centers[i],new_centers[i]) != 0:
                 #if distances between centers is 0 then they are not dif
                  return True
+        return False
+        
     def is_unassigned(self,i):
         self.assignments[i] == -1
 
-    def dist(self,x,y):
-        return sum((x-y)**2)**(1/2)
+    def dist(self, x, y):
+        return np.linalg.norm(x - y) 
 
 # Example usage
 
@@ -155,9 +161,9 @@ class KMeans():
 # if __name__ == "__main__":
 #     centers = [[0, 0], [2, 2], [-3, 2], [2, -4]]
 #     X, _ = datasets.make_blobs(n_samples=300, centers=centers, cluster_std=1, random_state=0)
-    
+#     centroids = []
 #     kmeans = KMeans(X, 4)
-#     kmeans.lloyds('farthest_first')  # Example with KMeans++ initialization
+#     kmeans.lloyds('random',centroids)  # Example with KMeans++ initialization
     # images = kmeans.snaps
 
     # images[0].save(

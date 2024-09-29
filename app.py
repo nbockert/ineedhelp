@@ -39,23 +39,26 @@ def index():
 # Route to return data for Plotly.js plot
 @app.route('/get_data', methods=['GET'])
 def get_data():
+    print("at get data")
     dataX = X[:, 0].tolist()
     dataY = X[:, 1].tolist()
     return jsonify({'dataX': dataX, 'dataY': dataY})
 
-@app.route('/start_clustering', methods=['POST'])
-def start_clustering():
-    global kmeans
-    global graphs
-    init_method = request.json.get('init_method')
-    k = request.json.get("num_clusters")
-    kmeans = KMeans(X, k)
-    graphs = kmeans.lloyds(init_method,centroids)
-    last_snapshot = graphs[-1] if graphs else None
-    if last_snapshot:
-        return jsonify({"snap_file": last_snapshot})
-    else:
-        return jsonify({"error": "No snapshots generated"}), 500
+#for printing last one that matters 
+# @app.route('/start_clustering', methods=['POST'])
+# def start_clustering():
+#     global kmeans
+#     global graphs
+#     init_method = request.json.get('init_method')
+#     k = request.json.get("num_clusters")
+#     kmeans = KMeans(X, k)
+#     graphs = kmeans.lloyds(init_method,centroids)
+#     return jsonify(graphs)
+#     # last_snapshot = graphs[-1] if graphs else None
+#     # if last_snapshot:
+#     #     return jsonify({"snap_file": last_snapshot})
+#     # else:
+#     #     return jsonify({"error": "No snapshots generated"}), 500
 
 @app.route('/add_centroids', methods=['POST'])
 def add_centroids():
@@ -93,14 +96,12 @@ def update_plot_with_clusters(centroids):
 def steps():
     global kmeans
     global graphs
-    if len(graphs)>0:
-        return jsonify(graphs)
-    else:
-        init_method = request.json.get('init_method')
-        k = request.json.get("num_clusters")
-        kmeans = KMeans(X, k)
-        graphs = kmeans.lloyds(init_method,centroids)
-        return jsonify(graphs)
+
+    init_method = request.json.get('init_method')
+    k = request.json.get("num_clusters")
+    kmeans = KMeans(X, k)
+    graphs = kmeans.lloyds(init_method,centroids)
+    return jsonify({"graphs":graphs})
     
     # Send the centroids snapshots to the frontend
 

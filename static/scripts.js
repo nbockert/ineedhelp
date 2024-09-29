@@ -111,8 +111,8 @@ function updatePlot(imageUrl) {
 // When the user selects "Manual"
 function onInitMethodChange() {
     let oldDiv = document.getElementById("cluster_image");
+    oldDiv.src = '';
     k = parseInt(document.getElementById("num_clusters").value);
-    oldDiv.innerHTML = '';  // Clear previous snapshots
     let method = document.getElementById('init_method').value;
     if (method === 'manual') {
         isManual = true;
@@ -123,38 +123,42 @@ function onInitMethodChange() {
             });
     } else {
         isManual = false;
-        fetch('/start_clustering', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                num_clusters: k,
-                init_method: method
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);  // Use this to debug
-            if (data.snap_file) {
-                let snapshotDiv = document.getElementById("clusterPlot");
-                snapshotDiv.innerHTML = '';
-                let img = document.createElement('img');
-                img.src = `${data.snap_file}`;  
-                img.style.width = '300px';  
-                snapshotDiv.appendChild(img);
-            } else if (data.error) {
-                console.error(data.error);
-            }
-        })
-        .catch(error => console.error('Error:', error));
-    }
+    //     fetch('/start_clustering', {
+    //         method: 'POST',
+    //         headers: {
+    //             'Content-Type': 'application/json',
+    //         },
+    //         body: JSON.stringify({
+    //             num_clusters: k,
+    //             init_method: method
+    //         })
+    //     })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         console.log(data);  // Use this to debug
+    //         if (data) {
+    //             let snapshotDiv = document.getElementById("clusterPlot");
+    //             // snapshotDiv.innerHTML = '';
+    //             let img = document.createElement('img');
+    //             img.src = `${data.snap_file}`;  
+    //             // img.style.width = '300px';  
+    //             snapshotDiv.appendChild(img);
+
+
+    //         } else if (data.error) {
+    //             console.error(data.error);
+    //         }
+    //     })
+    //     .catch(error => console.error('Error:', error));
+    // }
+}
 }
 
 function StepThrough(){
     let oldDiv = document.getElementById("cluster_image");
     oldDiv.innerHTML = '';
     oldDiv.src ='';
+    let method = document.getElementById('init_method').value;
 
     if(press===false){
         onInitMethodChange()
@@ -170,7 +174,7 @@ function StepThrough(){
         })
         .then(response => response.json())
         .then(data => {
-            snapshots = data;
+            snapshots = data.graphs;
             displaySnapshots(stepnum);
             press=true;
             stepnum++;
@@ -188,12 +192,12 @@ function StepThrough(){
 function displaySnapshots(stepIndex) {
     let snapshotDiv = document.getElementById("clusterPlot");
     snapshotDiv.innerHTML = '';  // Clear previous snapshots
-    
     let img = document.createElement('img');
     img.src = `/static/${snapshots[stepIndex]}`;  // Use the current snapshot
     img.alt = `Snapshot ${stepIndex}`;
     // img.style.width = '300px';  // Set image width
     snapshotDiv.appendChild(img);
+    
 }
 
 function Regenerate(){
