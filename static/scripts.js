@@ -1,8 +1,13 @@
 
 
-let isManual = false;
+var isManual = false;
 let selectedCentroids = [];
-let k = 0;
+var k = 0;
+var stepnum = 0;
+var press = false;
+var snapshots = []; 
+var method = '';
+
 // Function to send selected centroids to the backend
 function displayMessage(message) {
     document.getElementById('output').innerText = message;
@@ -55,7 +60,6 @@ function plotData(dataX, dataY,data) {
     };
 
     Plotly.newPlot('clusterPlot', [trace, centroidTrace], layout);
-    let count = 0
     // while(count<=k){
     let clusterPlot = document.getElementById('clusterPlot');
     clusterPlot.on('plotly_click', function(data) {
@@ -65,15 +69,6 @@ function plotData(dataX, dataY,data) {
 
         updateCentroidPlot(dataX, dataY);
 
-        fetch('/some_endpoint')
-        .then(response => response.json())
-        .then(data => {
-            // Call the JavaScript function with the received data
-            plotData(data.dataX,data.dataY,data.data);
-        })
-        .catch(error => console.error('Error fetching data:', error));
-        
-        // If we've selected enough centroids, send them to the server
      
     });
 }
@@ -115,12 +110,12 @@ function updatePlot(imageUrl) {
 
 // When the user selects "Manual"
 function onInitMethodChange() {
+    let oldDiv = document.getElementById("cluster_image");
+    k = parseInt(document.getElementById("num_clusters").value);
+    oldDiv.innerHTML = '';  // Clear previous snapshots
     let method = document.getElementById('init_method').value;
     if (method === 'manual') {
-        k = parseInt(document.getElementById("num_clusters").value);
         isManual = true;
-
-        // Fetch data for the plot and render it
         fetch('/get_data')
             .then(response => response.json())
             .then(data => {
@@ -128,9 +123,6 @@ function onInitMethodChange() {
             });
     } else {
         isManual = false;
-        k = parseInt(document.getElementById("num_clusters").value);
-
-        // Send a POST request to the Flask server with k and initMethod
         fetch('/start_clustering', {
             method: 'POST',
             headers: {
@@ -144,11 +136,98 @@ function onInitMethodChange() {
         .then(response => response.json())
         .then(data => {
             console.log(data);  // Use this to debug
-            // Display the result image or other output based on the result
             if (data.snap_file) {
-                document.getElementById('cluster_image').src = data.snap_file;
+                let snapshotDiv = document.getElementById("clusterPlot");
+                snapshotDiv.innerHTML = '';
+                let img = document.createElement('img');
+                img.src = `${data.snap_file}`;  
+                img.style.width = '300px';  
+                snapshotDiv.appendChild(img);
+            } else if (data.error) {
+                console.error(data.error);
             }
         })
         .catch(error => console.error('Error:', error));
     }
 }
+
+function StepThrough(){
+    let oldDiv = document.getElementById("cluster_image");
+    oldDiv.innerHTML = '';
+    oldDiv.src ='';
+
+    if(press===false){
+        onInitMethodChange()
+        fetch('/steps', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                num_clusters: k,
+                init_method: method
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            snapshots = data;
+            displaySnapshots(stepnum);
+            press=true;
+            stepnum++;
+        })
+        
+    }else{
+        if (stepnum < snapshots.length) {
+            displaySnapshots(stepnum)
+            stepnum++;
+        } else {
+            alert("KMeans has converged");
+        }
+}
+}
+function displaySnapshots(stepIndex) {
+    let snapshotDiv = document.getElementById("clusterPlot");
+    snapshotDiv.innerHTML = '';  // Clear previous snapshots
+    
+    let img = document.createElement('img');
+    img.src = `/static/${snapshots[stepIndex]}`;  // Use the current snapshot
+    img.alt = `Snapshot ${stepIndex}`;
+    // img.style.width = '300px';  // Set image width
+    snapshotDiv.appendChild(img);
+}
+
+function Regenerate(){
+    let oldDiv = document.getElementById("cluster_image");
+    oldDiv.innerHTML = '';
+    oldDiv.src ='';
+    fetch('/regenerate', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            console.error(data.error);  // Handle error
+        } else {
+            isManual = false;
+            selectedCentroids = [];
+            k = 0;
+            stepnum = 0;
+            press = false;
+            snapshots = []; 
+            document.getElementById("clusterPlot").innerHTML = ''; 
+            oldDiv.src = 'snapinit.png';
+            oldDiv.onload = function() {
+                oldDiv.src = 'snapinit.png'; // Reassign the same source to update the image
+            };
+
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+
+// document.getElementById('step-button').addEventListener('click', StepThrough);
+
+// window.onload = startKMeans;

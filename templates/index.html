@@ -18,11 +18,15 @@
             <option value="kmeans++">KMeans++</option>
             <option value="manual">Manual</option>
         </select>
+        <button onclick="StepThrough()">Step Through KMeans</button>
+        <button onclick="Regenerate()">Generate New Data Set</button>
+        <img id="cluster_image" src="{{ url_for('static', filename=snap_init) }}" alt="Cluster Plot"> 
         
         <div id="clusterPlot"></div>
-        <img id="cluster_image" src="{{ url_for('static', filename=snap_init) }}" alt="Cluster Plot">
+        <!-- <img id="cluster_image" src="" alt="Cluster Image" style="width:400px;height:400px;"> -->
 
-        <!-- <img id="cluster_image" src="{{ snap_init }}"> -->
+
+        
         
     </body>
 </html>

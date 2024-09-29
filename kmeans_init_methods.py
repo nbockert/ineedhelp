@@ -2,8 +2,7 @@ import numpy as np
 from PIL import Image as im
 import matplotlib.pyplot as plt
 import sklearn.datasets as datasets
-from matplotlib.backend_bases import MouseButton
-
+import os
 
 class KMeans():
 
@@ -15,27 +14,29 @@ class KMeans():
         self.centroids = []
     
     def snap(self, centers):
-        # print(centers)
-        # print(len(centers))
-        TEMPFILE = "temp.png"
+        filename = f"snapshot_{len(self.snaps)}.png"
+        filepath = os.path.join("static", filename)
         fig, ax = plt.subplots()
         ax.scatter(self.data[:, 0], self.data[:, 1], c=self.assignment)
         for center in centers:
             ax.scatter(center[0], center[1], c='r')
-        fig.savefig(TEMPFILE)
+        fig.savefig(filepath)
         plt.close()
-        self.snaps.append(im.fromarray(np.asarray(im.open(TEMPFILE))))
+        self.snaps.append(filename)
+        # self.snaps.append(im.fromarray(np.asarray(im.open(TEMPFILE))))
 
     
     def lloyds(self,init_method,centroids):
         if init_method == 'manual':
             self.centroids = centroids
+            self.snap(centroids)
             self.make_clusters(self.centroids)
         else:
             centers = self.initialize(init_method)
             print("centers after init method",centers)
             self.centroids=centers
             self.make_clusters(centers)
+            self.snap(centers)
         # self.snap(centers)
             print("made clusters")
         new_centers = self.compute_centers()
@@ -48,7 +49,7 @@ class KMeans():
             self.make_clusters(centers)
             new_centers = self.compute_centers()
             self.snap(new_centers)
-        return
+        return self.snaps
     
     def initialize(self, method):
         if method == 'random':
