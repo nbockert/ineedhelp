@@ -35,7 +35,6 @@ class KMeans():
             self.make_clusters(self.centroids)
         else:
             self.centroids = self.initialize(init_method)
-            print("fucking centroids",len(self.centroids))
             self.make_clusters(self.centroids)
             self.snap(self.centroids)
         # self.snap(centers)

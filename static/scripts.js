@@ -1,7 +1,7 @@
 
 
 var isManual = false;
-let selectedCentroids = [];
+var selectedCentroids = [];
 var k = 0;
 var stepnum = 0;
 var press = false;
@@ -105,16 +105,20 @@ function updateCentroidPlot(dataX, dataY) {
 
 // Function to update the plot with the selected centroids
 function updatePlot(imageUrl) {
-    document.getElementById('cluster_image').src = imageUrl;
+    let snapshotDiv = document.getElementById("clusterPlot");
+    snapshotDiv.innerHTML = '';  // Clear previous snapshots
+    let img = document.createElement('img');
+    img.src = imageUrl;
 }
 
 // When the user selects "Manual"
 function onInitMethodChange() {
-    let oldDiv = document.getElementById("cluster_image");
-    oldDiv.src = '';
+    let snapshotDiv = document.getElementById("clusterPlot");
+    snapshotDiv.innerHTML = ''; 
     k = parseInt(document.getElementById("num_clusters").value);
     let method = document.getElementById('init_method').value;
     if (method === 'manual') {
+ // Clear previous snapshots
         isManual = true;
         fetch('/get_data')
             .then(response => response.json())
@@ -155,9 +159,6 @@ function onInitMethodChange() {
 }
 
 function StepThrough(){
-    let oldDiv = document.getElementById("cluster_image");
-    oldDiv.innerHTML = '';
-    oldDiv.src ='';
     let method = document.getElementById('init_method').value;
 
     if(press===false){
@@ -195,15 +196,13 @@ function displaySnapshots(stepIndex) {
     let img = document.createElement('img');
     img.src = `/static/${snapshots[stepIndex]}`;  // Use the current snapshot
     img.alt = `Snapshot ${stepIndex}`;
-    // img.style.width = '300px';  // Set image width
     snapshotDiv.appendChild(img);
     
 }
 
 function Regenerate(){
-    let oldDiv = document.getElementById("cluster_image");
-    oldDiv.innerHTML = '';
-    oldDiv.src ='';
+    let snapshotDiv = document.getElementById("clusterPlot");
+    snapshotDiv.innerHTML = ''; 
     fetch('/regenerate', {
         method: 'POST',
         headers: {
@@ -212,26 +211,42 @@ function Regenerate(){
     })
     .then(response => response.json())
     .then(data => {
-        if (data.error) {
-            console.error(data.error);  // Handle error
-        } else {
-            isManual = false;
-            selectedCentroids = [];
-            k = 0;
-            stepnum = 0;
-            press = false;
-            snapshots = []; 
-            document.getElementById("clusterPlot").innerHTML = ''; 
-            oldDiv.src = 'snapinit.png';
-            oldDiv.onload = function() {
-                oldDiv.src = 'snapinit.png'; // Reassign the same source to update the image
-            };
-
-        }
+        isManual = false;
+        selectedCentroids = [];
+        k = 0;
+        stepnum = 0;
+        press = false;
+        snapshots = []; 
+        let img = document.createElement('img');
+        img.src = `/static/${data.new_snap}`;  // Use the current snapshot from Flask
+        img.style.width = '500px';  // You can adjust the width if needed
+        snapshotDiv.appendChild(img);
+        
     })
     .catch(error => console.error('Error:', error));
 }
 
-// document.getElementById('step-button').addEventListener('click', StepThrough);
+function Convergence(){
+    k = parseInt(document.getElementById("num_clusters").value);
+    let method = document.getElementById('init_method').value;
+    fetch('/converge', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            num_clusters: k,
+            init_method: method
+        })
+    })
+        .then(response => response.json())
+        .then(data => {
+            let snapshotDiv = document.getElementById("clusterPlot");
+            snapshotDiv.innerHTML = '';  // Clear previous snapshots
+            let img = document.createElement('img');
+            img.src = `/static/${data.snap_file}`;  // Use the current snapshot
+            snapshotDiv.appendChild(img);
+        })
+        .catch(error => console.error('Error:', error));
 
-// window.onload = startKMeans;
+}

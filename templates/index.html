@@ -19,11 +19,21 @@
             <option value="manual">Manual</option>
         </select>
         <button onclick="StepThrough()">Step Through KMeans</button>
+        <button onclick="Convergence()">Run to Convergence</button>
         <button onclick="Regenerate()">Generate New Data Set</button>
-        <img id="cluster_image" src="static/snapinit.png" alt="Cluster Plot"> 
+        
         
         <div id="clusterPlot"></div>
-        <!-- <img id="cluster_image" src="" alt="Cluster Image" style="width:400px;height:400px;"> -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                let snapshotDiv = document.getElementById("clusterPlot");
+                snapshotDiv.innerHTML = '';  // Clear previous snapshots
+                let img = document.createElement('img');
+                img.src = `/static/{{ snap_init }}`;  // Use the current snapshot from Flask
+                img.style.width = '500px';  // You can adjust the width if needed
+                snapshotDiv.appendChild(img);
+            });
+        </script>
 
 
         
